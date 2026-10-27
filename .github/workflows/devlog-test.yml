@@ -1,0 +1,46 @@
+# Test of the Portfolio devlog workflow: reads RepoTest's public history and adds
+# a line to FileToModify.txt for every commit marked with a "Devlog: <title>"
+# trailer (see .github/scripts/update_file.py).
+name: Devlog test
+
+on:
+  schedule:
+    - cron: "7,37 * * * *"  # twice an hour (UTC) for the test; the Portfolio runs every 3 hours
+  workflow_dispatch:         # adds a "Run workflow" button in the Actions tab
+
+permissions:
+  contents: write            # to commit the text file to this repo
+
+concurrency:
+  group: devlog-test         # never two runs at once
+  cancel-in-progress: false
+
+env:
+  SOURCE_REPO: https://github.com/JustABeta-code/RepoTest.git
+  TARGET_FILE: FileToModify.txt
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Check out this repo
+        uses: actions/checkout@v7
+
+      - name: Clone the source repo's history (commits only, no files)
+        run: git clone --filter=tree:0 --no-checkout --single-branch "$SOURCE_REPO" "$RUNNER_TEMP/source"
+
+      - name: Add new entries
+        run: python3 .github/scripts/update_file.py "$RUNNER_TEMP/source" "$TARGET_FILE"
+
+      - name: Commit and push if anything changed
+        run: |
+          if [ -z "$(git status --porcelain -- "$TARGET_FILE")" ]; then
+            echo "Nothing to commit."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add "$TARGET_FILE"
+          git commit -m "Update $TARGET_FILE from RepoTest"
+          git push
