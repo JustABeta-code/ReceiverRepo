@@ -32,6 +32,8 @@ jobs:
 
       - name: Add new entries
         shell: bash  # runs with pipefail, so the step still fails if the script fails
+        env:
+          GH_TOKEN: ${{ github.token }}  # authenticates the request for push times
         run: python3 .github/scripts/update_file.py "$RUNNER_TEMP/source" "$TARGET_FILE" | tee "$RUNNER_TEMP/added.txt"
 
       - name: Commit, push and notify if anything changed
