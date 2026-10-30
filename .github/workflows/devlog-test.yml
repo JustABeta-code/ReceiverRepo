@@ -16,7 +16,7 @@ concurrency:
   cancel-in-progress: false
 
 env:
-  SOURCE_REPO: https://github.com/JustABeta-code/TestRepo.git
+  SOURCE_REPO: https://github.com/JustABeta-code/RepoTest.git
   TARGET_FILE: FileToModify.txt
 
 jobs:
